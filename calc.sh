@@ -24,12 +24,8 @@ calc()
 	esac
 }
 
-CSV_HEADER="Brutto Netto Steuer effektive-prozentuale-Belastung*1000"
-echo "$CSV_HEADER" >"$FILE_CSV"
-
-while [ "$BRUTTO" -lt "$MAX" ]; do {
-	BRUTTO=$(( BRUTTO + STEP ))
-
+calc_steuer2023()	# input: BRUTTO => emits variables: NETTO + STEUER + PERCENT
+{
 	if   [ $BRUTTO -le 10908 ]; then
 		STEUER=0
 		NETTO=$BRUTTO
@@ -51,6 +47,14 @@ while [ "$BRUTTO" -lt "$MAX" ]; do {
 		NETTO="$( calc "$BRUTTO - $STEUER" )"
 		PERCENT="$( calc "100-($NETTO*100/$BRUTTO)" )"
 	}
+}
+
+CSV_HEADER="Brutto Netto Steuer effektive-prozentuale-Belastung*1000"
+echo "$CSV_HEADER" >"$FILE_CSV"
+
+while [ "$BRUTTO" -lt "$MAX" ]; do {
+	BRUTTO=$(( BRUTTO + STEP ))
+	calc_steuer$YEAR "$BRUTTO"
 
 	NETTO_MONTH="$( calc "$NETTO/12" )"
 	echo "Jahresbrutto: $BRUTTO Netto: $NETTO Steuer: $STEUER Prozent: $PERCENT (Monatsnetto: $NETTO_MONTH)"
