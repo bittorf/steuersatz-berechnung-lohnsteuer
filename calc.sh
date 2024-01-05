@@ -5,8 +5,9 @@
 # https://www.sthu.org/blog/02-bruttonetto/index.html
 # https://www.finanz-tools.de/einkommensteuer/berechnung-formeln/2023
 
-MAX="${1:-120000}"
-STEP="${2:-100}"	# z.b. 25 Euro Schritte
+YEAR="${1:-2023}"
+MAX="${2:-120000}"
+STEP="${3:-100}"	# z.b. 25 Euro Schritte
 
 FILE_CSV='all.csv'
 FILE_PNG='all.png'
@@ -70,11 +71,20 @@ while [ "$BRUTTO" -lt "$MAX" ]; do {
 # 35 - 142472
 # 40 - 366155
 
-printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
-	"set object circle at first 83150,30000 radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
-	"set label 'Brutto 83150 € => 30% Steuern eff.' at 75000,32500" \
-	"set object circle at first 58450,25000 radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
-	"set label 'Brutto 58450 € => 25% Steuern eff.' at 48450,27500" \
+P0=15;P0X=28580;P0Y=$((P0*1000));L0X=$((P0X-10000));L0Y=$((P0Y+2500))
+P1=20;P1X=41271;P1Y=$((P1*1000));L1X=$((P1X-10000));L1Y=$((P1Y+2500))
+P2=25;P2X=58449;P2Y=$((P2*1000));L2X=$((P2X-10000));L2Y=$((P2Y+2500))
+P3=30;P3X=83109;P3Y=$((P3*1000));L3X=$((P3X-10000));L3Y=$((P3Y+2500))
+
+printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
+	"set object circle at first $P0X,$P0Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
+	"set label 'Brutto $P0X € => $P0% Steuern eff.' at $L0X,$L0Y" \
+	"set object circle at first $P1X,$P1Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
+	"set label 'Brutto $P1X € => $P1% Steuern eff.' at $L1X,$L1Y" \
+	"set object circle at first $P2X,$P2Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
+	"set label 'Brutto $P2X € => $P2% Steuern eff.' at $L2X,$L2Y" \
+	"set object circle at first $P3X,$P3Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
+	"set label 'Brutto $P3X € => $P3% Steuern eff.' at $L3X,$L3Y" \
 	"set ytics 2500" \
 	"set xtics 5000" \
 	"set term png" \
