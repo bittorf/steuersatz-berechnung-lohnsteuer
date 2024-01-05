@@ -61,6 +61,15 @@ while [ "$BRUTTO" -lt "$MAX" ]; do {
 	echo "$BRUTTO $NETTO $STEUER $PERCENT" >>"$FILE_CSV"
 } done
 
+# needs 1 euro steps and e.g.: grep -m1 " 25.00"$ all.csv
+# 10 - 20281
+# 15 - 28580
+# 20 - 41271
+# 25 - 58449
+# 30 - 83109
+# 35 - 142472
+# 40 - 366155
+
 printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
 	"set object circle at first 83150,30000 radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
 	"set label 'Brutto 83150 € => 30% Steuern eff.' at 75000,32500" \
