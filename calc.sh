@@ -8,6 +8,10 @@
 MAX="${1:-120000}"
 STEP="${2:-100}"	# z.b. 25 Euro Schritte
 
+FILE_CSV='all.csv'
+FILE_PNG='all.png'
+
+YEAR=2023
 BRUTTO=0
 STEUER=0
 NETTO=0
@@ -20,7 +24,8 @@ calc()
 	esac
 }
 
-echo "brutto netto steuer effektive-prozentuale-Belastung*1000" >all.csv
+CSV_HEADER="Brutto Netto Steuer effektive-prozentuale-Belastung*1000"
+echo "$CSV_HEADER" >"$FILE_CSV"
 
 while [ "$BRUTTO" -lt "$MAX" ]; do {
 	BRUTTO=$(( BRUTTO + STEP ))
@@ -49,10 +54,10 @@ while [ "$BRUTTO" -lt "$MAX" ]; do {
 
 	NETTO_MONTH="$( calc "$NETTO/12" )"
 	echo "Jahresbrutto: $BRUTTO Netto: $NETTO Steuer: $STEUER Prozent: $PERCENT (Monatsnetto: $NETTO_MONTH)"
-	echo "$BRUTTO $NETTO $STEUER $PERCENT" >>all.csv
+	echo "$BRUTTO $NETTO $STEUER $PERCENT" >>"$FILE_CSV"
 } done
 
-printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
+printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
 	"set object circle at first 83150,30000 radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
 	"set label 'Brutto 83150 € => 30% Steuern eff.' at 75000,32500" \
 	"set object circle at first 58450,25000 radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
@@ -61,13 +66,14 @@ printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
 	"set xtics 5000" \
 	"set term png" \
 	"set terminal png size 1900,1000" \
-	"set output 'all.png'" \
+	"set output '$FILE_PNG'" \
 	"set ylabel 'Ergebnis'" \
-	"set xlabel 'Bruttolohn in Euro im Jahr 2023'" \
+	"set xlabel 'Bruttolohn in Euro im Jahr $YEAR'" \
 	"set title 'Steuerlast abhängig vom Brutto'" \
 	"set grid" \
 	"set key autotitle columnhead" \
 	"set key autotitle columnhead" \
-	"plot 'all.csv' using 1:2 with lines, '' using 1:3 with lines, '' using 1:(\$4*1000) with lines, '' using 1:1 with lines" | gnuplot
-
-# printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n' "set format y ''" "set xlabel 'Bruttolohn in Euro im Jahr 2023'" "set title 'Steuerlast abhängig vom Brutto'" "set grid" "set key autotitle columnhead" "set key autotitle columnhead" "plot 'all.csv' using 1:2 with lines, '' using 1:3 with lines, '' using 1:(\$4*1000) with lines, '' using 1:1 with lines" | gnuplot --persist
+	"plot '$FILE_CSV'   using 1:2 with lines, \\" \
+			"'' using 1:3 with lines, \\" \
+			"'' using 1:(\$4*1000) with lines, \\" \
+			"'' using 1:1 with lines" | gnuplot && echo "see '$FILE_CSV' and '$FILE_PNG'"
