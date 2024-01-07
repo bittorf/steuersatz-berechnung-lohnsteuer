@@ -14,8 +14,9 @@ FILE_PNG='all.png'
 
 YEAR=2023
 BRUTTO=0
-STEUER=0
+STEUER=0	# Lohnsteuer
 NETTO=0
+SOZIAL=0
 
 calc()
 {
@@ -44,13 +45,23 @@ calc_steuer2023()	# input: BRUTTO => emits variables: NETTO + STEUER + PERCENT
 		STEUER="$( calc "((0.45*$BRUTTO) - 18307.73)" )"
 	fi
 
+	# Pflegeversicherung/PV: 2023 = 3.4% mit Kindern (Arbeitnehmer 50% davon)
+	# Arbeitslosenversicherung/ALV: 2023 = 2.6% (Arbeitnehmer 50% davon)
+	# Deutsche Rentenversicherung/DRV: 2023 = 18.6% (Arbeitnehmer 50% davon)
+	# gesetzliche Krankenversicherung/GKV: 2023 = ~15% (Arbeitnehmer 50% davon)
+	S1="3.4/2"
+	S2="2.6/2"
+	S3="18.6/2"
+	S4="15/2"
+	SOZIAL="$( calc "($BRUTTO/100*$S1) + ($BRUTTO/100*$S2) + ($BRUTTO/100*$S3) + ($BRUTTO/100*$S4)" exact )"
+
 	[ $BRUTTO -gt 10908 ] && {
 		NETTO="$( calc "$BRUTTO - $STEUER" )"
 		PERCENT="$( calc "100-($NETTO*100/$BRUTTO)" )"
 	}
 }
 
-CSV_HEADER="Brutto Netto Steuer effektive-prozentuale-Belastung*1000"
+CSV_HEADER="Brutto Netto Lohnsteuer effektive-prozentuale-Belastung*1000"
 echo "$CSV_HEADER" >"$FILE_CSV"
 
 while [ "$BRUTTO" -lt "$MAX" ]; do {
@@ -58,7 +69,9 @@ while [ "$BRUTTO" -lt "$MAX" ]; do {
 	calc_steuer$YEAR "$BRUTTO"
 
 	NETTO_MONTH="$( calc "$NETTO/12" )"
-	echo "Jahresbrutto: $BRUTTO Netto: $NETTO Steuer: $STEUER Prozent: $PERCENT (Monatsnetto: $NETTO_MONTH)"
+	REALNETTO_MONTH="$( calc "($NETTO-$SOZIAL)/12" )"
+	SOZIAL="$( calc "$SOZIAL / 1" )"
+	echo "Jahresbrutto: $BRUTTO Netto: $NETTO Steuer: $STEUER Sozial: $SOZIAL Prozent: $PERCENT (Monatsnetto: $NETTO_MONTH / $REALNETTO_MONTH)"
 	echo "$BRUTTO $NETTO $STEUER $PERCENT" >>"$FILE_CSV"
 } done
 
