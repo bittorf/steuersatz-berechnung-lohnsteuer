@@ -49,6 +49,7 @@ calc_steuer2023()	# input: BRUTTO => emits variables: NETTO + STEUER + PERCENT
 	# Arbeitslosenversicherung/ALV: 2023 = 2.6% (Arbeitnehmer 50% davon)
 	# Deutsche Rentenversicherung/DRV: 2023 = 18.6% (Arbeitnehmer 50% davon)
 	# gesetzliche Krankenversicherung/GKV: 2023 = ~15% (Arbeitnehmer 50% davon)
+	# gesetzliche Unfallversicherung/GUV: 2023 = 0% (100% trägt Arbeitgeber)
 	S1="3.4/2"
 	S2="2.6/2"
 	S3="18.6/2"
