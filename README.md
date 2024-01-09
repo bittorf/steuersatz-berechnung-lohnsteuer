@@ -9,6 +9,7 @@ see 'all.csv' and 'all.png'
 # ToDo
 * older years
 * hypertext labels: http://www.gnuplot.info/docs/loc12927.html
+* https://stackoverflow.com/questions/2827650/plotting-two-axes-in-gnuplot (for monthly)
 * Obergrenzen berücksichtigen (KK etc.)
 * Mindestlohn Beispiel: https://www.destatis.de/DE/Themen/Arbeit/Verdienste/Mindestloehne/_inhalt.html
   * 2023 = 12.00€/h brutto
