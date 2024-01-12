@@ -83,12 +83,12 @@ while [ "$BRUTTO" -lt "$MAX" ]; do {
 # Realnetto (Lohnsteuer+Sozialabgabe):
 # Brutto: 83109 => Realnetto 41720.62 => 3476.72 monatlich
 # Brutto: 66666 => Realnetto 35439.40 => 2953.28 monatlich
-R0=36066;R0X=66666;R0Y=$R0;J0X=$((R0X-17500));J0Y=$((R0Y+2500));R0HUMAN=$(( R0X / 1000 )).$(( R0X % 1000 ));M="$( calc "$R0/12" )"
-RP="$( calc "100-(($R0*100)/$R0X)" )";R0=36.066
+R0=36066;R0X=66666;R0Y=$R0;J0X=$((R0X-22500));J0Y=$((R0Y+2500));R0HUMAN="$( calc "scale=3;$R0X/1000" exact )";M="$( calc "$R0/12" )"
+RP="$( calc "100-(($R0*100)/$R0X)" )";R0H="$( calc "$R0X/(260*8)" )";MM="$( calc "$R0/(260*8)" )";R0=36.066
 
 # Grenzen Soizialversicherung:
-GRENZE_X1=59850 && GRENZE_Y1=11850	# PV/KV
-GRENZE_X2=87600 && GRENZE_Y2=14792	# AV/RV
+GRENZE_X1=59850 && GRENZE_Y1=11850 && HGRENZE_X1="$( calc "scale=3;$GRENZE_X1/1000" exact )"	# PV/KV
+GRENZE_X2=87600 && GRENZE_Y2=14792 && HGRENZE_X2="$( calc "scale=3;$GRENZE_X2/1000" exact )"	# AV/RV
 
 # Prozentuale effektive Lohnsteuerlast: needs 1 euro steps and e.g.: grep -m1 " 25.00"$ all.csv
 # 10% - 20281
@@ -107,7 +107,7 @@ P4=30;P4X=83109;P4Y=$((P4*1000));L4X=$((P4X-10000));L4Y=$((P4Y+2500));P4HUMAN="$
 
 printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
 	"set object circle at first $R0X,$R0Y radius char 0.5 fillstyle empty border lc rgb '#00ff00' lw 2" \
-	"set label 'Brutto $R0HUMAN € => $RP% Abgaben => $R0 € Realnetto = $M € monatlich' at $J0X,$J0Y" \
+	"set label 'Brutto $R0HUMAN € / $R0H €/h => $RP% Abgaben => $R0 € Realnetto = $M € monatlich = $MM €/h' at $J0X,$J0Y" \
 	"set object circle at first $P0X,$P0Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
 	"set label 'Brutto $P0HUMAN € => $P0% Lohnsteuer eff.' at $L0X,$L0Y" \
 	"set object circle at first $P1X,$P1Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
@@ -120,10 +120,10 @@ printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n
 	"set label 'Brutto $P4HUMAN € => $P4% Lohnsteuer eff.' at $L4X,$L4Y" \
 	"set arrow from $GRENZE_X1,0 to $GRENZE_X1,$GRENZE_Y1 nohead lc rgb '#bdc3c7'" \
 	"set object circle at first $GRENZE_X1,$GRENZE_Y1 radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
-	"set label 'Obergrenze Kranken/Plegeversicherung $GRENZE_X1 €' at $(( GRENZE_X1 - 12500 )),$(( GRENZE_Y1 / 2 ))" \
+	"set label 'Obergrenze Kranken/Plegeversicherung $HGRENZE_X1 €' at $(( GRENZE_X1 - 12500 )),$(( GRENZE_Y1 / 2 ))" \
 	"set arrow from $GRENZE_X2,0 to $GRENZE_X2,$GRENZE_Y2 nohead lc rgb '#bdc3c7'" \
 	"set object circle at first $GRENZE_X2,$GRENZE_Y2 radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
-	"set label 'Obergrenze Renten-/Arbeitslosenversicherung $GRENZE_X2 €' at $(( GRENZE_X2 - 12500 )),$(( GRENZE_Y2 / 2 ))" \
+	"set label 'Obergrenze Renten-/Arbeitslosenversicherung $HGRENZE_X2 €' at $(( GRENZE_X2 - 12500 )),$(( GRENZE_Y2 / 2 ))" \
 	"set ytics 2500" \
 	"set xtics 5000" \
 	"set term png" \
