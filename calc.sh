@@ -50,11 +50,12 @@ calc_steuer2023()	# input: BRUTTO => emits variables: NETTO + STEUER + PERCENT
 	# Deutsche Rentenversicherung/DRV: 2023 = 18.6% (Arbeitnehmer 50% davon)
 	# gesetzliche Krankenversicherung/GKV: 2023 = ~15% (Arbeitnehmer 50% davon)
 	# gesetzliche Unfallversicherung/GUV: 2023 = 0% (100% trägt Arbeitgeber)
-	S1="3.4/2"
-	S2="2.6/2"
-	S3="18.6/2"
-	S4="15/2"
-	SOZIAL="$( calc "($BRUTTO/100*$S1) + ($BRUTTO/100*$S2) + ($BRUTTO/100*$S3) + ($BRUTTO/100*$S4)" exact )"
+	PV="3.4/2"
+	AV="2.6/2"
+	RV="18.6/2"
+	KV="15/2"
+	UV=0
+	SOZIAL="$( calc "($BRUTTO/100*$PV) + ($BRUTTO/100*$AV) + ($BRUTTO/100*$RV) + ($BRUTTO/100*$KV) + $UV" exact )"
 
 	[ $BRUTTO -gt 10908 ] && {
 		NETTO="$( calc "$BRUTTO - $STEUER" )"
