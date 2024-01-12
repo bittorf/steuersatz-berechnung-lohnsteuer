@@ -45,17 +45,20 @@ calc_steuer2023()	# input: BRUTTO => emits variables: NETTO + STEUER + PERCENT
 		STEUER="$( calc "((0.45*$BRUTTO) - 18307.73)" )"
 	fi
 
+	# Grenzen:
+	# https://www.lohn-info.de/beitragsbemessungsgrenze_2023.html
+	#
 	# Pflegeversicherung/PV: 2023 = 3.4% mit Kindern (Arbeitnehmer 50% davon)
 	# Arbeitslosenversicherung/ALV: 2023 = 2.6% (Arbeitnehmer 50% davon)
 	# Deutsche Rentenversicherung/DRV: 2023 = 18.6% (Arbeitnehmer 50% davon)
 	# gesetzliche Krankenversicherung/GKV: 2023 = ~15% (Arbeitnehmer 50% davon)
 	# gesetzliche Unfallversicherung/GUV: 2023 = 0% (100% trägt Arbeitgeber)
-	PV="3.4/2"
-	AV="2.6/2"
-	RV="18.6/2"
-	KV="15/2"
+	PV="3.4/2"  && BRUTTO_PV="$BRUTTO" && test $BRUTTO -gt 59850 && BRUTTO_PV=59850		# = 4987,50 Euro/Monat
+	AV="2.6/2"  && BRUTTO_AV="$BRUTTO" && test $BRUTTO -gt 87600 && BRUTTO_AV=87600		# = 7300,00 Euro/Monat
+	RV="18.6/2" && BRUTTO_RV="$BRUTTO" && test $BRUTTO -gt 87600 && BRUTTO_RV=87600		# = 7300,00 Euro/Monat
+	KV="15/2"   && BRUTTO_KV="$BRUTTO" && test $BRUTTO -gt 59850 && BRUTTO_KV=59850		# = 4987,50 Euro/Monat
 	UV=0
-	SOZIAL="$( calc "($BRUTTO/100*$PV) + ($BRUTTO/100*$AV) + ($BRUTTO/100*$RV) + ($BRUTTO/100*$KV) + $UV" exact )"
+	SOZIAL="$( calc "($BRUTTO_PV/100*$PV) + ($BRUTTO_AV/100*$AV) + ($BRUTTO_RV/100*$RV) + ($BRUTTO_KV/100*$KV) + $UV" exact )"
 
 	[ $BRUTTO -gt 10908 ] && {
 		NETTO="$( calc "$BRUTTO - $STEUER" )"
@@ -80,8 +83,12 @@ while [ "$BRUTTO" -lt "$MAX" ]; do {
 # Realnetto (Lohnsteuer+Sozialabgabe):
 # Brutto: 83109 => Realnetto 41720.62 => 3476.72 monatlich
 # Brutto: 66666 => Realnetto 35439.40 => 2953.28 monatlich
-R0=35439;R0X=66666;R0Y=$R0;J0X=$((R0X-17500));J0Y=$((R0Y+2500));R0HUMAN=$(( R0X / 1000 )).$(( R0X % 1000 ));M=$((R0/12));M=$((M/1000)).$((M%1000))
-RP="$( calc "100-(($R0*100)/$R0X)" )";R0=35.439
+R0=36066;R0X=66666;R0Y=$R0;J0X=$((R0X-17500));J0Y=$((R0Y+2500));R0HUMAN=$(( R0X / 1000 )).$(( R0X % 1000 ));M="$( calc "$R0/12" )"
+RP="$( calc "100-(($R0*100)/$R0X)" )";R0=36.066
+
+# Grenzen Soizialversicherung:
+GRENZE_X1=59850 && GRENZE_Y1=11850	# PV/KV
+GRENZE_X2=87600 && GRENZE_Y2=14792	# AV/RV
 
 # Prozentuale effektive Lohnsteuerlast: needs 1 euro steps and e.g.: grep -m1 " 25.00"$ all.csv
 # 10% - 20281
@@ -91,16 +98,16 @@ RP="$( calc "100-(($R0*100)/$R0X)" )";R0=35.439
 # 30% - 83109
 # 35% - 142472
 # 40% - 366155
-
+#
 P0=10;P0X=20281;P0Y=$((P0*1000));L0X=$((P0X-10000));L0Y=$((P0Y+2500));P0HUMAN="$(( P0X / 1000 )).$(( P0X % 1000 ))"
 P1=15;P1X=28580;P1Y=$((P1*1000));L1X=$((P1X-10000));L1Y=$((P1Y+2500));P1HUMAN="$(( P1X / 1000 )).$(( P1X % 1000 ))"
 P2=20;P2X=41271;P2Y=$((P2*1000));L2X=$((P2X-10000));L2Y=$((P2Y+2500));P2HUMAN="$(( P2X / 1000 )).$(( P2X % 1000 ))"
 P3=25;P3X=58449;P3Y=$((P3*1000));L3X=$((P3X-10000));L3Y=$((P3Y+2500));P3HUMAN="$(( P3X / 1000 )).$(( P3X % 1000 ))"
 P4=30;P4X=83109;P4Y=$((P4*1000));L4X=$((P4X-10000));L4Y=$((P4Y+2500));P4HUMAN="$(( P4X / 1000 )).$(( P4X % 1000 ))"
 
-printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
+printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
 	"set object circle at first $R0X,$R0Y radius char 0.5 fillstyle empty border lc rgb '#00ff00' lw 2" \
-	"set label 'Brutto $R0HUMAN € => $RP% Abgaben => $R0€ Realnetto = $M monatlich' at $J0X,$J0Y" \
+	"set label 'Brutto $R0HUMAN € => $RP% Abgaben => $R0 € Realnetto = $M € monatlich' at $J0X,$J0Y" \
 	"set object circle at first $P0X,$P0Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
 	"set label 'Brutto $P0HUMAN € => $P0% Lohnsteuer eff.' at $L0X,$L0Y" \
 	"set object circle at first $P1X,$P1Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
@@ -111,6 +118,12 @@ printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n
 	"set label 'Brutto $P3HUMAN € => $P3% Lohnsteuer eff.' at $L3X,$L3Y" \
 	"set object circle at first $P4X,$P4Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
 	"set label 'Brutto $P4HUMAN € => $P4% Lohnsteuer eff.' at $L4X,$L4Y" \
+	"set arrow from $GRENZE_X1,0 to $GRENZE_X1,$GRENZE_Y1 nohead lc rgb '#bdc3c7'" \
+	"set object circle at first $GRENZE_X1,$GRENZE_Y1 radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
+	"set label 'Obergrenze Kranken/Plegeversicherung $GRENZE_X1 €' at $(( GRENZE_X1 - 12500 )),$(( GRENZE_Y1 / 2 ))" \
+	"set arrow from $GRENZE_X2,0 to $GRENZE_X2,$GRENZE_Y2 nohead lc rgb '#bdc3c7'" \
+	"set object circle at first $GRENZE_X2,$GRENZE_Y2 radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
+	"set label 'Obergrenze Renten-/Arbeitslosenversicherung $GRENZE_X2 €' at $(( GRENZE_X2 - 12500 )),$(( GRENZE_Y2 / 2 ))" \
 	"set ytics 2500" \
 	"set xtics 5000" \
 	"set term png" \
@@ -118,7 +131,7 @@ printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n
 	"set output '$FILE_PNG'" \
 	"set ylabel 'Ergebnis'" \
 	"set xlabel 'Jahresbruttolohn in Euro im Jahr $YEAR'" \
-	"set title 'Jährliche Abgaben- und Steuerlast abhängig vom Brutto'" \
+	"set title 'Jährliche Abgaben- und Steuerlast abhängig vom Brutto (verheiratet, 2 Kinder, alte Bundesländer)'" \
 	"set grid" \
 	"set key autotitle columnhead" \
 	"plot '$FILE_CSV'   using 1:2 with lines, \\" \
