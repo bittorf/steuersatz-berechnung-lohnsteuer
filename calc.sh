@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck shell=dash
 #
 # https://www.test.de/steuerprogression-einfach-erklaert-5813257-0/
 # Einkommensteuertabelle 2023 - Grundtabelle
@@ -8,6 +9,11 @@
 YEAR="${1:-2023}"
 MAX="${2:-120000}"
 STEP="${3:-100}"	# z.b. 25 Euro Schritte
+
+case "$YEAR" in
+	2023) tax_function="calc_steuer${YEAR}" ;;
+	*) echo "[ERROR] year '${YEAR:-unset}' not implemented"; exit 1 ;;
+esac
 
 FILE_CSV='all.csv'
 FILE_PNG='all.png'
@@ -27,6 +33,8 @@ calc()
 
 calc_steuer2023()	# input: BRUTTO => emits variables: NETTO + STEUER + PERCENT
 {
+	BRUTTO="$1"
+
 	if   [ "$BRUTTO" -le 10908 ]; then
 		STEUER=0
 		NETTO=$BRUTTO
@@ -85,19 +93,31 @@ calc_steuer2023()	# input: BRUTTO => emits variables: NETTO + STEUER + PERCENT
 	export BRUTTO NETTO STEUER SOZIAL PV AV RV KV PERCENT
 }
 
-CSV_HEADER="Brutto Lohnsteuer Netto Sozialabgaben Pflegevers. Arbeitslosenvers. Rentenvers. Krankenvers. Realnetto effektive-prozentuale-Lohnsteuerbelastung*1000"
-echo "$CSV_HEADER" >"$FILE_CSV"
-
-while [ "$BRUTTO" -le "$MAX" ]; do {
-	"calc_steuer${YEAR}" "$BRUTTO"
-
+calc_misc()
+{
 	BRUTTO_MONTH="$( calc "$BRUTTO/12" )"
 	REALNETTO="$( calc "($NETTO-$SOZIAL)/1" )"
 	REALNETTO_MONTH="$( calc "($NETTO-$SOZIAL)/12" )"
 	SOZIAL="$( calc "$SOZIAL / 1" )"
+	ABGABEN_PERCENT="$( calc "100-(($REALNETTO*100)/$BRUTTO)" )"
 
 	HOUR_BRUTTO="$( calc "$BRUTTO/(260*8)" )"
 	HOUR_REALNETTO="$( calc "$REALNETTO/(260*8)" )"
+}
+
+calc_tax()
+{
+	"$tax_function" "$1"
+	calc_misc
+}
+
+CSV_HEADER="Brutto Lohnsteuer Netto Sozialabgaben Pflegevers. Arbeitslosenvers. Rentenvers. Krankenvers. Realnetto effektive-prozentuale-Lohnsteuerbelastung*1000"
+echo "$CSV_HEADER" >"$FILE_CSV"
+
+while [ "$BRUTTO" -le "$MAX" ]; do {
+	calc_tax "$BRUTTO"
+
+	# "Brutto $BRUTTO € / $HOUR_BRUTTO €/h => $ABGABEN_PERCENT% Abgaben => $REALNETTO € Realnetto = $REALNETTO_MONTH € monatlich = $HOUR_REALNETTO €/h"
 
 	echo "Brutto_Jahr/Monat/Stunde: $BRUTTO / $BRUTTO_MONTH / $HOUR_BRUTTO Lohnsteuer%: $PERCENT Lohnsteuer: $STEUER Netto: $NETTO Sozial: $SOZIAL PV: $PV AV: $AV RV: $RV KV: $KV Realnetto_Jahr/Monat/Stunde: $REALNETTO / $REALNETTO_MONTH / $HOUR_REALNETTO"
 	echo "$BRUTTO $STEUER $NETTO $SOZIAL $PV $AV $RV $KV $REALNETTO $PERCENT" >>"$FILE_CSV"
@@ -119,10 +139,6 @@ while [ "$BRUTTO" -le "$MAX" ]; do {
 # Brutto_Jahr/Monat/Stunde: 24960 / 2080.00 / 12.00 Lohnsteuer%: 13.09 Lohnsteuer: 3269.13 Netto: 21690.87 Sozial: 5004.48 PV: 424.32 AV: 324.48 RV: 2321.28 KV: 1934.40 Realnetto_Jahr/Monat/Stunde 16686.39 / 1390.53 / 8.02
 # Brutto_Jahr/Monat/Stunde: 33333 / 2777.75 / 16.02 Lohnsteuer%: 17.10 Lohnsteuer: 5700.16 Netto: 27632.84 Sozial: 6683.24 PV: 566.66 AV: 433.32 RV: 3099.96 KV: 2583.30 Realnetto_Jahr/Monat/Stunde 20949.60 / 1745.80 / 10.07
 # Brutto_Jahr/Monat/Stunde: 66666 / 5555.50 / 32.05 Lohnsteuer%: 27.04 Lohnsteuer: 18026.74 Netto: 48639.26 Sozial: 12722.40 PV: 1017.45 AV: 866.65 RV: 6199.93 KV: 4638.37 Realnetto_Jahr/Monat/Stunde 35916.86 / 2993.07 / 17.26
-#
-# Beispiel-A:
-R0=36066;R0X=66666;R0Y=$R0;J0X=$((R0X-22500));J0Y=$((R0Y+2500));R0HUMAN="$( calc "scale=3;$R0X/1000" exact )";M="$( calc "$R0/12" )"
-RP="$( calc "100-(($R0*100)/$R0X)" )";R0H="$( calc "$R0X/(260*8)" )";MM="$( calc "$R0/(260*8)" )";R0="$( calc "scale=3;$R0/1000" exact )"
 
 # Grenzen Sozialversicherung:
 GRENZE_X1=59850 && GRENZE_Y1=11850 && HGRENZE_X1="$( calc "scale=3;$GRENZE_X1/1000" exact )"	# PV/KV
@@ -143,7 +159,36 @@ P2=20;P2X=41271;P2Y=$((P2*1000));L2X=$((P2X-10000));L2Y=$((P2Y+2500));P2HUMAN="$
 P3=25;P3X=58449;P3Y=$((P3*1000));L3X=$((P3X-10000));L3Y=$((P3Y+2500));P3HUMAN="$(( P3X / 1000 )).$(( P3X % 1000 ))"
 P4=30;P4X=83109;P4Y=$((P4*1000));L4X=$((P4X-10000));L4Y=$((P4Y+2500));P4HUMAN="$(( P4X / 1000 )).$(( P4X % 1000 ))"
 
-printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
+dot_with_label()
+{
+	local dot_color="$1"
+	local dot_x="${2%.*}"			# cut off before dot
+	local dot_y="${3%.*}"			# cut off before dot
+	local line_orientation="$4"		# upper,lower,none
+	local label="$5"			# TODO: convert all numbers to humanreadable
+
+	local linestart_x linestart_y labelstart_x labelstart_y
+
+	case "$dot_color" in
+		red) dot_color='#00ff00' ;;
+	esac
+
+	case "$line_orientation" in
+		upper)
+			linestart_x=$(( dot_x - 15000 ))
+			linestart_y=$(( dot_y + 30000 ))
+			labelstart_x=$(( dot_x - 37500 ))
+			labelstart_y=$(( dot_y + 32500 ))
+		;;
+	esac
+
+	printf '%s\n%s\n%s\n' \
+		"set object circle at first $dot_x,$dot_y radius char 0.5 fillstyle empty border linecolor rgb '$dot_color' linewidth 2" \
+		"set arrow from $linestart_x,$linestart_y to $dot_x,$dot_y nohead lc rgb '#aabbcc'" \
+		"set label '$label' at $labelstart_x,$labelstart_y"
+}
+
+printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
 	"set term png" \
 	"set terminal png size 1900,1000" \
 	"set output '$FILE_PNG'" \
@@ -172,9 +217,7 @@ printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n
 	"set object circle at first $P4X,$P4Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
 	"set label 'Brutto $P4HUMAN € => $P4% Lohnsteuer eff.' at $L4X,$L4Y" \
 	\
-	"set arrow from $(( R0X - 15000 )),$(( R0Y + 30000 )) to $R0X,$R0Y nohead lc rgb '#aabbcc'" \
-	"set object circle at first $R0X,$R0Y radius char 0.5 fillstyle empty border lc rgb '#00ff00' lw 2" \
-	"set label 'Brutto $R0HUMAN € / $R0H €/h => $RP% Abgaben => $R0 € Realnetto = $M € monatlich = $MM €/h' at $(( R0X - 37500 )),$(( R0Y + 32500 ))" \
+	"$( calc_tax 66666 && dot_with_label 'red' "$BRUTTO" "$REALNETTO" upper "Brutto $BRUTTO € / $HOUR_BRUTTO €/h => $ABGABEN_PERCENT% Abgaben => $REALNETTO € Realnetto = $REALNETTO_MONTH € monatlich = $HOUR_REALNETTO €/h" )" \
 	\
 	"set arrow from $(( GRENZE_X1 - 5000 )),$(( (GRENZE_Y1 / 2) + 1000 )) to $GRENZE_X1,$GRENZE_Y1 nohead lc rgb '#aabbcc'" \
 	"set object circle at first $GRENZE_X1,$GRENZE_Y1 radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
