@@ -7,12 +7,7 @@ see 'all.csv' and 'all.png'
 ![Steuerliche Belastung im Jahr 2023](https://github.com/bittorf/steuersatz-berechnung-lohnsteuer/blob/main/2023/all.png?raw=true)
 
 # ToDo
-* older years
+* frühere Jahre einbauen
 * hypertext labels: http://www.gnuplot.info/docs/loc12927.html
-* https://stackoverflow.com/questions/2827650/plotting-two-axes-in-gnuplot (for monthly)
-* Mindestlohn Beispiel: https://www.destatis.de/DE/Themen/Arbeit/Verdienste/Mindestloehne/_inhalt.html
-  * 2023 = 12.00€/h brutto
-  * 2024 = 12.41€/h brutto
-  * 230 Arbeitstage + 10 Feiertage + 20 Urlaubstage = 260 Tage
-  * 12.41€ brutto * 8h * 260Tage:
-    * 25812.80 Brutto = 33.37% Abgaben => 17197.07 Realnetto = 1433.09 monatlich (8.27€/h)
+* https://stackoverflow.com/questions/2827650/plotting-two-axes-in-gnuplot (z.b. Monatliches Ergebnis)
+* HTML bauen mit interaktiver vertikaler Meßstelle
