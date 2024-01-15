@@ -144,6 +144,19 @@ P3=25;P3X=58449;P3Y=$((P3*1000));L3X=$((P3X-10000));L3Y=$((P3Y+2500));P3HUMAN="$
 P4=30;P4X=83109;P4Y=$((P4*1000));L4X=$((P4X-10000));L4Y=$((P4Y+2500));P4HUMAN="$(( P4X / 1000 )).$(( P4X % 1000 ))"
 
 printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
+	"set term png" \
+	"set terminal png size 1900,1000" \
+	"set output '$FILE_PNG'" \
+	\
+	"set grid" \
+	"set ytics 2500" \
+	"set xtics 5000" \
+	\
+	"set key autotitle columnhead" \
+	"set ylabel 'Ergebnis'" \
+	"set xlabel 'Jahresbruttolohn in Euro im Jahr $YEAR'" \
+	"set title 'Jährliche Abgaben- und Steuerlast für Arbeitnehmer abhängig vom Brutto (verheiratet, 2 Kinder, alte Bundesländer)'" \
+	\
 	"set object circle at first $P0X,$P0Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
 	"set label 'Brutto $P0HUMAN € => $P0% Lohnsteuer eff.' at $L0X,$L0Y" \
 	\
@@ -171,16 +184,6 @@ printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n
 	"set object circle at first $GRENZE_X2,$GRENZE_Y2 radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
 	"set label 'Obergrenze Renten-/Arbeitslosenversicherung $HGRENZE_X2 €' at $(( GRENZE_X2 - 12500 )),$(( GRENZE_Y2 / 2 ))" \
 	\
-	"set ytics 2500" \
-	"set xtics 5000" \
-	"set term png" \
-	"set terminal png size 1900,1000" \
-	"set output '$FILE_PNG'" \
-	"set ylabel 'Ergebnis'" \
-	"set xlabel 'Jahresbruttolohn in Euro im Jahr $YEAR'" \
-	"set title 'Jährliche Abgaben- und Steuerlast für Arbeitnehmer abhängig vom Brutto (verheiratet, 2 Kinder, alte Bundesländer)'" \
-	"set grid" \
-	"set key autotitle columnhead" \
 	"plot '$FILE_CSV'   using 1:3 with lines, \\" \
 			"'' using 1:2 with lines, \\" \
 			"'' using 1:4 with lines, \\" \
