@@ -99,11 +99,20 @@ while [ "$BRUTTO" -le "$MAX" ]; do {
 	HOUR_BRUTTO="$( calc "$BRUTTO/(260*8)" )"
 	HOUR_REALNETTO="$( calc "$REALNETTO/(260*8)" )"
 
-	echo "Brutto_Jahr/Monat/Stunde: $BRUTTO / $BRUTTO_MONTH / $HOUR_BRUTTO Lohnsteuer%: $PERCENT Lohnsteuer: $STEUER Netto: $NETTO Sozial: $SOZIAL PV: $PV AV: $AV RV: $RV KV: $KV Realnetto_Jahr/Monat/Stunde $REALNETTO / $REALNETTO_MONTH / $HOUR_REALNETTO"
+	echo "Brutto_Jahr/Monat/Stunde: $BRUTTO / $BRUTTO_MONTH / $HOUR_BRUTTO Lohnsteuer%: $PERCENT Lohnsteuer: $STEUER Netto: $NETTO Sozial: $SOZIAL PV: $PV AV: $AV RV: $RV KV: $KV Realnetto_Jahr/Monat/Stunde: $REALNETTO / $REALNETTO_MONTH / $HOUR_REALNETTO"
 	echo "$BRUTTO $STEUER $NETTO $SOZIAL $PV $AV $RV $KV $REALNETTO $PERCENT" >>"$FILE_CSV"
 
 	BRUTTO=$(( BRUTTO + STEP ))
 } done
+
+# FIXME: Der Begriff "Reallohn" meint etwas anderes, als hier verwendet: https://www.destatis.de/DE/Themen/Arbeit/Verdienste/Realloehne-Nettoverdienste/_inhalt.html
+
+# TODO: median-einkommen => z.b. blass in den hintergrund plotten
+# TODO: https://www.destatis.de/DE/Themen/Arbeit/Verdienste/Verdienste-Branche-Berufe/_inhalt.html
+# 2023 = 43842 https://www.handelsblatt.com/politik/deutschland/gehaltsreport-2023-bestbezahlte-berufe-in-deutschland/24504394.html
+# 2023 = 43750 https://www.gehalt.de/news/der-neue-stepstone-gehaltsreport-wie-fair-sind-die-gehaelter-2023#datenbasis-und-methode-des-gehaltsreport
+# 2023 = 44407 https://www.capital.de/karriere/medianeinkommen--so-viel-verdienen-die-deutschen-im-mittel-31108506.html
+# 2019 = 24730 https://www.wsi.de/de/verteilungsbericht-2022-30037-medianeinkommen-30065.htm
 
 # Beispiele Realnetto (Brutto minus Lohnsteuer und Sozialabgaben):
 # Brutto: 24960 = Mindestlohn 2023 = 12 Euro * 8h * 260 Tage
@@ -134,25 +143,34 @@ P2=20;P2X=41271;P2Y=$((P2*1000));L2X=$((P2X-10000));L2Y=$((P2Y+2500));P2HUMAN="$
 P3=25;P3X=58449;P3Y=$((P3*1000));L3X=$((P3X-10000));L3Y=$((P3Y+2500));P3HUMAN="$(( P3X / 1000 )).$(( P3X % 1000 ))"
 P4=30;P4X=83109;P4Y=$((P4*1000));L4X=$((P4X-10000));L4Y=$((P4Y+2500));P4HUMAN="$(( P4X / 1000 )).$(( P4X % 1000 ))"
 
-printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
-	"set object circle at first $R0X,$R0Y radius char 0.5 fillstyle empty border lc rgb '#00ff00' lw 2" \
-	"set label 'Brutto $R0HUMAN € / $R0H €/h => $RP% Abgaben => $R0 € Realnetto = $M € monatlich = $MM €/h' at $J0X,$J0Y" \
+printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
 	"set object circle at first $P0X,$P0Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
 	"set label 'Brutto $P0HUMAN € => $P0% Lohnsteuer eff.' at $L0X,$L0Y" \
+	\
 	"set object circle at first $P1X,$P1Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
 	"set label 'Brutto $P1HUMAN € => $P1% Lohnsteuer eff.' at $L1X,$L1Y" \
+	\
 	"set object circle at first $P2X,$P2Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
 	"set label 'Brutto $P2HUMAN € => $P2% Lohnsteuer eff.' at $L2X,$L2Y" \
+	\
 	"set object circle at first $P3X,$P3Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
 	"set label 'Brutto $P3HUMAN € => $P3% Lohnsteuer eff.' at $L3X,$L3Y" \
+	\
 	"set object circle at first $P4X,$P4Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
 	"set label 'Brutto $P4HUMAN € => $P4% Lohnsteuer eff.' at $L4X,$L4Y" \
-	"set arrow from $GRENZE_X1,0 to $GRENZE_X1,$GRENZE_Y1 nohead lc rgb '#bdc3c7'" \
+	\
+	"set arrow from $(( R0X - 15000 )),$(( R0Y + 30000 )) to $R0X,$R0Y nohead lc rgb '#aabbcc'" \
+	"set object circle at first $R0X,$R0Y radius char 0.5 fillstyle empty border lc rgb '#00ff00' lw 2" \
+	"set label 'Brutto $R0HUMAN € / $R0H €/h => $RP% Abgaben => $R0 € Realnetto = $M € monatlich = $MM €/h' at $(( R0X - 37500 )),$(( R0Y + 32500 ))" \
+	\
+	"set arrow from $(( GRENZE_X1 - 5000 )),$(( (GRENZE_Y1 / 2) + 1000 )) to $GRENZE_X1,$GRENZE_Y1 nohead lc rgb '#aabbcc'" \
 	"set object circle at first $GRENZE_X1,$GRENZE_Y1 radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
 	"set label 'Obergrenze Kranken/Plegeversicherung $HGRENZE_X1 €' at $(( GRENZE_X1 - 12500 )),$(( GRENZE_Y1 / 2 ))" \
-	"set arrow from $GRENZE_X2,0 to $GRENZE_X2,$GRENZE_Y2 nohead lc rgb '#bdc3c7'" \
+	\
+	"set arrow from $(( GRENZE_X2 - 5000 )),$(( (GRENZE_Y2 / 2) + 1000 )) to $GRENZE_X2,$GRENZE_Y2 nohead lc rgb '#aabbcc'" \
 	"set object circle at first $GRENZE_X2,$GRENZE_Y2 radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
 	"set label 'Obergrenze Renten-/Arbeitslosenversicherung $HGRENZE_X2 €' at $(( GRENZE_X2 - 12500 )),$(( GRENZE_Y2 / 2 ))" \
+	\
 	"set ytics 2500" \
 	"set xtics 5000" \
 	"set term png" \
