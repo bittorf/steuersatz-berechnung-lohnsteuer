@@ -128,17 +128,13 @@ while [ "$BRUTTO" -le "$MAX" ]; do {
 # FIXME: Der Begriff "Reallohn" meint etwas anderes, als hier verwendet: https://www.destatis.de/DE/Themen/Arbeit/Verdienste/Realloehne-Nettoverdienste/_inhalt.html
 
 # TODO: median-einkommen => z.b. blass in den hintergrund plotten
+
+# Median:
 # TODO: https://www.destatis.de/DE/Themen/Arbeit/Verdienste/Verdienste-Branche-Berufe/_inhalt.html
 # 2023 = 43842 https://www.handelsblatt.com/politik/deutschland/gehaltsreport-2023-bestbezahlte-berufe-in-deutschland/24504394.html
 # 2023 = 43750 https://www.gehalt.de/news/der-neue-stepstone-gehaltsreport-wie-fair-sind-die-gehaelter-2023#datenbasis-und-methode-des-gehaltsreport
 # 2023 = 44407 https://www.capital.de/karriere/medianeinkommen--so-viel-verdienen-die-deutschen-im-mittel-31108506.html
 # 2019 = 24730 https://www.wsi.de/de/verteilungsbericht-2022-30037-medianeinkommen-30065.htm
-
-# Beispiele Realnetto (Brutto minus Lohnsteuer und Sozialabgaben):
-# Brutto: 24960 = Mindestlohn 2023 = 12 Euro * 8h * 260 Tage
-# Brutto_Jahr/Monat/Stunde: 24960 / 2080.00 / 12.00 Lohnsteuer%: 13.09 Lohnsteuer: 3269.13 Netto: 21690.87 Sozial: 5004.48 PV: 424.32 AV: 324.48 RV: 2321.28 KV: 1934.40 Realnetto_Jahr/Monat/Stunde 16686.39 / 1390.53 / 8.02
-# Brutto_Jahr/Monat/Stunde: 33333 / 2777.75 / 16.02 Lohnsteuer%: 17.10 Lohnsteuer: 5700.16 Netto: 27632.84 Sozial: 6683.24 PV: 566.66 AV: 433.32 RV: 3099.96 KV: 2583.30 Realnetto_Jahr/Monat/Stunde 20949.60 / 1745.80 / 10.07
-# Brutto_Jahr/Monat/Stunde: 66666 / 5555.50 / 32.05 Lohnsteuer%: 27.04 Lohnsteuer: 18026.74 Netto: 48639.26 Sozial: 12722.40 PV: 1017.45 AV: 866.65 RV: 6199.93 KV: 4638.37 Realnetto_Jahr/Monat/Stunde 35916.86 / 2993.07 / 17.26
 
 # Grenzen Sozialversicherung:
 GRENZE_X1=59850 && GRENZE_Y1=11850 && HGRENZE_X1="$( calc "scale=3;$GRENZE_X1/1000" exact )"	# PV/KV
@@ -165,7 +161,7 @@ dot_with_label()
 	local dot_x="${2%.*}"			# cut off before dot
 	local dot_y="${3%.*}"			# cut off before dot
 	local line_orientation="$4"		# upper,lower,none
-	local label="$5"			# TODO: convert all numbers to humanreadable
+	local label="$5"			# TODO: convert all numbers to humanreadable (e.g. 23.500)
 
 	local linestart_x linestart_y labelstart_x labelstart_y
 
@@ -177,7 +173,7 @@ dot_with_label()
 		upper)
 			linestart_x=$(( dot_x - 15000 ))
 			linestart_y=$(( dot_y + 30000 ))
-			labelstart_x=$(( dot_x - 37500 ))
+			labelstart_x=$(( dot_x - 37500 )) && test "$labelstart_x" -ge 500 || labelstart_x=500
 			labelstart_y=$(( dot_y + 32500 ))
 		;;
 	esac
@@ -186,6 +182,16 @@ dot_with_label()
 		"set object circle at first $dot_x,$dot_y radius char 0.5 fillstyle empty border linecolor rgb '$dot_color' linewidth 2" \
 		"set arrow from $linestart_x,$linestart_y to $dot_x,$dot_y nohead lc rgb '#aabbcc'" \
 		"set label '$label' at $labelstart_x,$labelstart_y"
+}
+
+example_realnetto()
+{
+	local brutto="$1"
+	local text="$2"
+
+	calc_tax "$brutto"
+	text="$text: Brutto $BRUTTO € / $HOUR_BRUTTO €/h => $ABGABEN_PERCENT% Abgaben => $REALNETTO € Realnetto = $REALNETTO_MONTH € monatlich = $HOUR_REALNETTO €/h"
+	dot_with_label 'red' "$BRUTTO" "$REALNETTO" upper "$text"
 }
 
 printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
@@ -217,7 +223,9 @@ printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n
 	"set object circle at first $P4X,$P4Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
 	"set label 'Brutto $P4HUMAN € => $P4% Lohnsteuer eff.' at $L4X,$L4Y" \
 	\
-	"$( calc_tax 66666 && dot_with_label 'red' "$BRUTTO" "$REALNETTO" upper "Brutto $BRUTTO € / $HOUR_BRUTTO €/h => $ABGABEN_PERCENT% Abgaben => $REALNETTO € Realnetto = $REALNETTO_MONTH € monatlich = $HOUR_REALNETTO €/h" )" \
+	"$( example_realnetto 24960 'Mindestlohn' )" \
+	"$( example_realnetto 43750 'Median' )" \
+	"$( example_realnetto 66842 'z.b.' )" \
 	\
 	"set arrow from $(( GRENZE_X1 - 5000 )),$(( (GRENZE_Y1 / 2) + 1000 )) to $GRENZE_X1,$GRENZE_Y1 nohead lc rgb '#aabbcc'" \
 	"set object circle at first $GRENZE_X1,$GRENZE_Y1 radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
