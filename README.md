@@ -1,6 +1,6 @@
 # Steuerlast in 2023
 ```
-$ ./calc.sh 2023 123500 100
+$ ./calc.sh 2023 107500 100
 ...
 see 'all.csv' and 'all.png'
 ```
