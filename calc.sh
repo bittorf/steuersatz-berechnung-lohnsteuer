@@ -91,6 +91,8 @@ calc_steuer2023()	# input: BRUTTO => emits variables: NETTO + STEUER + PERCENT
 	}
 
 	export BRUTTO NETTO STEUER SOZIAL PV AV RV KV PERCENT
+	export MAX_KVPV=59850		# Obergrenze Kranken-/Pflegeversicherung
+	export MAX_RVAV=87600		# Obergrenze Renten-/Arbeitslosenversicherung
 }
 
 calc_misc()
@@ -107,7 +109,8 @@ calc_misc()
 
 calc_tax()
 {
-	"$tax_function" "$1"
+	export BRUTTO="$1"
+	"$tax_function" "$BRUTTO"
 	calc_misc
 }
 
@@ -116,8 +119,6 @@ echo "$CSV_HEADER" >"$FILE_CSV"
 
 while [ "$BRUTTO" -le "$MAX" ]; do {
 	calc_tax "$BRUTTO"
-
-	# "Brutto $BRUTTO € / $HOUR_BRUTTO €/h => $ABGABEN_PERCENT% Abgaben => $REALNETTO € Realnetto = $REALNETTO_MONTH € monatlich = $HOUR_REALNETTO €/h"
 
 	echo "Brutto_Jahr/Monat/Stunde: $BRUTTO / $BRUTTO_MONTH / $HOUR_BRUTTO Lohnsteuer%: $PERCENT Lohnsteuer: $STEUER Netto: $NETTO Sozial: $SOZIAL PV: $PV AV: $AV RV: $RV KV: $KV Realnetto_Jahr/Monat/Stunde: $REALNETTO / $REALNETTO_MONTH / $HOUR_REALNETTO"
 	echo "$BRUTTO $STEUER $NETTO $SOZIAL $PV $AV $RV $KV $REALNETTO $PERCENT" >>"$FILE_CSV"
@@ -135,10 +136,6 @@ while [ "$BRUTTO" -le "$MAX" ]; do {
 # 2023 = 43750 https://www.gehalt.de/news/der-neue-stepstone-gehaltsreport-wie-fair-sind-die-gehaelter-2023#datenbasis-und-methode-des-gehaltsreport
 # 2023 = 44407 https://www.capital.de/karriere/medianeinkommen--so-viel-verdienen-die-deutschen-im-mittel-31108506.html
 # 2019 = 24730 https://www.wsi.de/de/verteilungsbericht-2022-30037-medianeinkommen-30065.htm
-
-# Grenzen Sozialversicherung:
-GRENZE_X1=59850 && GRENZE_Y1=11850 && HGRENZE_X1="$( calc "scale=3;$GRENZE_X1/1000" exact )"	# PV/KV
-GRENZE_X2=87600 && GRENZE_Y2=14792 && HGRENZE_X2="$( calc "scale=3;$GRENZE_X2/1000" exact )"	# AV/RV
 
 # Prozentuale effektive Lohnsteuerlast: needs 1 euro steps and e.g.: grep -m1 " 25.00"$ all.csv
 # 10% - 20281
@@ -167,6 +164,7 @@ dot_with_label()
 
 	case "$dot_color" in
 		red) dot_color='#00ff00' ;;
+		orange) dot_color='#ffa500' ;;
 	esac
 
 	case "$line_orientation" in
@@ -175,6 +173,12 @@ dot_with_label()
 			linestart_y=$(( dot_y + 30000 ))
 			labelstart_x=$(( dot_x - 37500 )) && test "$labelstart_x" -ge 500 || labelstart_x=500
 			labelstart_y=$(( dot_y + 32500 ))
+		;;
+		lower)
+			linestart_x=$(( dot_x - 5000 ))
+			linestart_y=$(( (dot_y / 2) + 1000 ))
+			labelstart_x=$(( dot_x - 12500 )) && test "$labelstart_x" -ge 500 || labelstart_x=500
+			labelstart_y=$(( dot_y / 2 ))
 		;;
 	esac
 
@@ -190,54 +194,63 @@ example_realnetto()
 	local text="$2"
 
 	calc_tax "$brutto"
-	text="$text: Brutto $BRUTTO € / $HOUR_BRUTTO €/h => $ABGABEN_PERCENT% Abgaben => $REALNETTO € Realnetto = $REALNETTO_MONTH € monatlich = $HOUR_REALNETTO €/h"
+	text="$text: Brutto $BRUTTO € / $HOUR_BRUTTO €/h => $ABGABEN_PERCENT% Abgaben => ${REALNETTO%.*} € Realnetto = ${REALNETTO_MONTH%.*} € monatlich = $HOUR_REALNETTO €/h"
 	dot_with_label 'red' "$BRUTTO" "$REALNETTO" upper "$text"
 }
 
-printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
-	"set term png" \
-	"set terminal png size 1900,1000" \
-	"set output '$FILE_PNG'" \
-	\
-	"set grid" \
-	"set ytics 2500" \
-	"set xtics 5000" \
-	\
-	"set key autotitle columnhead" \
-	"set ylabel 'Ergebnis'" \
-	"set xlabel 'Jahresbruttolohn in Euro im Jahr $YEAR'" \
-	"set title 'Jährliche Abgaben- und Steuerlast für Arbeitnehmer abhängig vom Brutto (verheiratet, 2 Kinder, alte Bundesländer)'" \
-	\
-	"set object circle at first $P0X,$P0Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
-	"set label 'Brutto $P0HUMAN € => $P0% Lohnsteuer eff.' at $L0X,$L0Y" \
-	\
-	"set object circle at first $P1X,$P1Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
-	"set label 'Brutto $P1HUMAN € => $P1% Lohnsteuer eff.' at $L1X,$L1Y" \
-	\
-	"set object circle at first $P2X,$P2Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
-	"set label 'Brutto $P2HUMAN € => $P2% Lohnsteuer eff.' at $L2X,$L2Y" \
-	\
-	"set object circle at first $P3X,$P3Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
-	"set label 'Brutto $P3HUMAN € => $P3% Lohnsteuer eff.' at $L3X,$L3Y" \
-	\
-	"set object circle at first $P4X,$P4Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
-	"set label 'Brutto $P4HUMAN € => $P4% Lohnsteuer eff.' at $L4X,$L4Y" \
-	\
-	"$( example_realnetto 24960 'Mindestlohn' )" \
-	"$( example_realnetto 43750 'Median' )" \
-	"$( example_realnetto 66842 'z.b.' )" \
-	\
-	"set arrow from $(( GRENZE_X1 - 5000 )),$(( (GRENZE_Y1 / 2) + 1000 )) to $GRENZE_X1,$GRENZE_Y1 nohead lc rgb '#aabbcc'" \
-	"set object circle at first $GRENZE_X1,$GRENZE_Y1 radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
-	"set label 'Obergrenze Kranken/Plegeversicherung $HGRENZE_X1 €' at $(( GRENZE_X1 - 12500 )),$(( GRENZE_Y1 / 2 ))" \
-	\
-	"set arrow from $(( GRENZE_X2 - 5000 )),$(( (GRENZE_Y2 / 2) + 1000 )) to $GRENZE_X2,$GRENZE_Y2 nohead lc rgb '#aabbcc'" \
-	"set object circle at first $GRENZE_X2,$GRENZE_Y2 radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2" \
-	"set label 'Obergrenze Renten-/Arbeitslosenversicherung $HGRENZE_X2 €' at $(( GRENZE_X2 - 12500 )),$(( GRENZE_Y2 / 2 ))" \
-	\
-	"plot '$FILE_CSV'   using 1:3 with lines, \\" \
-			"'' using 1:2 with lines, \\" \
-			"'' using 1:4 with lines, \\" \
-			"'' using 1:(\$10*1000) with lines, \\" \
-			"'' using 1:(\$1-\$2-\$4) title 'Realnetto (Brutto abzüglich Lohnsteuer und Sozialabgaben)' with lines, \\" \
-			"'' using 1:1 with lines" | gnuplot && echo "see '$FILE_CSV' and '$FILE_PNG'"
+gnuplot_out()
+{
+	cat <<EOF
+set term png
+set terminal png size 1900,1000
+set output '$FILE_PNG'
+
+set grid
+set ytics 2500
+set xtics 5000
+
+set key autotitle columnhead
+set ylabel 'Ergebnis'
+set xlabel 'Jahresbruttolohn in Euro im Jahr $YEAR'
+set title 'BRD: Jährliche Abgaben- und Steuerlast für Arbeitnehmer abhängig vom Brutto (verheiratet, 2 Kinder, alte Bundesländer, 40-Stunden-Woche)'
+
+set object circle at first $P0X,$P0Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2
+set label 'Brutto $P0HUMAN € => $P0% Lohnsteuer eff.' at $L0X,$L0Y
+
+set object circle at first $P1X,$P1Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2
+set label 'Brutto $P1HUMAN € => $P1% Lohnsteuer eff.' at $L1X,$L1Y
+
+set object circle at first $P2X,$P2Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2
+set label 'Brutto $P2HUMAN € => $P2% Lohnsteuer eff.' at $L2X,$L2Y
+
+set object circle at first $P3X,$P3Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2
+set label 'Brutto $P3HUMAN € => $P3% Lohnsteuer eff.' at $L3X,$L3Y
+
+set object circle at first $P4X,$P4Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2
+set label 'Brutto $P4HUMAN € => $P4% Lohnsteuer eff.' at $L4X,$L4Y
+
+# Mindestlohn:
+$( example_realnetto 24960 'Mindestlohn' )
+
+# Median:
+$( example_realnetto 43750 'Median' )
+
+# Beispiel:
+$( example_realnetto 66842 'Beispiel' )
+
+# KV/PV-max-Grenze:
+$( calc_tax "$MAX_KVPV" && dot_with_label 'orange' "$BRUTTO" "$SOZIAL" lower "Obergrenze Kranken-/Plegeversicherung $BRUTTO €" )
+
+# RV/AV-max-Grenze:
+$( calc_tax "$MAX_RVAV" && dot_with_label 'orange' "$BRUTTO" "$SOZIAL" lower "Obergrenze Renten-/Arbeitslosenversicherung $BRUTTO €" )
+
+plot '$FILE_CSV'   using 1:3 with lines, \\
+		'' using 1:2 with lines, \\
+		'' using 1:4 with lines, \\
+		'' using 1:(\$10*1000) with lines, \\
+		'' using 1:(\$1-\$2-\$4) title 'Realnetto (Brutto abzüglich Lohnsteuer und Sozialabgaben)' with lines, \\
+		'' using 1:1 with lines
+EOF
+}
+
+gnuplot_out | gnuplot && echo "see '$FILE_CSV' and '$FILE_PNG'"
