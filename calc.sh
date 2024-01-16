@@ -5,6 +5,16 @@
 # Einkommensteuertabelle 2023 - Grundtabelle
 # https://www.sthu.org/blog/02-bruttonetto/index.html
 # https://www.finanz-tools.de/einkommensteuer/berechnung-formeln/2023
+# FIXME: Der Begriff "Reallohn" meint etwas anderes, als hier verwendet: https://www.destatis.de/DE/Themen/Arbeit/Verdienste/Realloehne-Nettoverdienste/_inhalt.html
+#
+# Median:
+# TODO: median-einkommen => z.b. blass in den hintergrund plotten
+# TODO: https://www.destatis.de/DE/Themen/Arbeit/Verdienste/Verdienste-Branche-Berufe/_inhalt.html
+# 2023 = 43842 https://www.handelsblatt.com/politik/deutschland/gehaltsreport-2023-bestbezahlte-berufe-in-deutschland/24504394.html
+# 2023 = 43750 https://www.gehalt.de/news/der-neue-stepstone-gehaltsreport-wie-fair-sind-die-gehaelter-2023#datenbasis-und-methode-des-gehaltsreport
+# 2023 = 44407 https://www.capital.de/karriere/medianeinkommen--so-viel-verdienen-die-deutschen-im-mittel-31108506.html
+# 2019 = 24730 https://www.wsi.de/de/verteilungsbericht-2022-30037-medianeinkommen-30065.htm
+
 
 YEAR="${1:-2023}"
 MAX="${2:-120000}"
@@ -75,7 +85,7 @@ calc_steuer2023()	# input: BRUTTO => emits variables: NETTO + STEUER + PERCENT
 
 		# gesetzliche Krankenversicherung/GKV: 2023 = ~15% (Arbeitnehmer 50% davon)
 		# billigste war: BKK firmus und die BKK GILDEMEISTER SEIDENSTICKER mit 0.90% ZUsatzbeitrag = 15.5%
-		# FIXME! zwischen 520,01...2000 Euro monatlich (Midijob?) Übergangsrechnung/Gleitzone => Arbeitgeber zahlt mehr Anteil
+		# FIXME! zwischen 520,01...2000 Euro monatlich ("Midijob") Übergangsrechnung/Gleitzone => Arbeitgeber zahlt mehr Anteil
 		KV="15.5/2" && BRUTTO_KV="$BRUTTO" && test "$BRUTTO" -gt 59850 && BRUTTO_KV=59850		# = 4987,50 Euro/Monat
 		KV="$( calc "($BRUTTO_KV/100)*$KV" )"
 	fi
@@ -91,8 +101,17 @@ calc_steuer2023()	# input: BRUTTO => emits variables: NETTO + STEUER + PERCENT
 	}
 
 	export BRUTTO NETTO STEUER SOZIAL PV AV RV KV PERCENT
+
 	export MAX_KVPV=59850		# Obergrenze Kranken-/Pflegeversicherung
 	export MAX_RVAV=87600		# Obergrenze Renten-/Arbeitslosenversicherung
+
+	export LS10=20281	# Prozentuale effektive Lohnsteuerlast: needs 1 euro steps and e.g.: grep -m1 " 25.00"$ all.csv
+	export LS15=28580
+	export LS20=41271
+	export LS25=58449
+	export LS30=83109
+	export LS35=142472
+	export LS40=366155
 }
 
 calc_misc()
@@ -103,7 +122,7 @@ calc_misc()
 	SOZIAL="$( calc "$SOZIAL / 1" )"
 	ABGABEN_PERCENT="$( calc "100-(($REALNETTO*100)/$BRUTTO)" )"
 
-	HOUR_BRUTTO="$( calc "$BRUTTO/(260*8)" )"
+	HOUR_BRUTTO="$(    calc "$BRUTTO   /(260*8)" )"
 	HOUR_REALNETTO="$( calc "$REALNETTO/(260*8)" )"
 }
 
@@ -126,32 +145,6 @@ while [ "$BRUTTO" -le "$MAX" ]; do {
 	BRUTTO=$(( BRUTTO + STEP ))
 } done
 
-# FIXME: Der Begriff "Reallohn" meint etwas anderes, als hier verwendet: https://www.destatis.de/DE/Themen/Arbeit/Verdienste/Realloehne-Nettoverdienste/_inhalt.html
-
-# TODO: median-einkommen => z.b. blass in den hintergrund plotten
-
-# Median:
-# TODO: https://www.destatis.de/DE/Themen/Arbeit/Verdienste/Verdienste-Branche-Berufe/_inhalt.html
-# 2023 = 43842 https://www.handelsblatt.com/politik/deutschland/gehaltsreport-2023-bestbezahlte-berufe-in-deutschland/24504394.html
-# 2023 = 43750 https://www.gehalt.de/news/der-neue-stepstone-gehaltsreport-wie-fair-sind-die-gehaelter-2023#datenbasis-und-methode-des-gehaltsreport
-# 2023 = 44407 https://www.capital.de/karriere/medianeinkommen--so-viel-verdienen-die-deutschen-im-mittel-31108506.html
-# 2019 = 24730 https://www.wsi.de/de/verteilungsbericht-2022-30037-medianeinkommen-30065.htm
-
-# Prozentuale effektive Lohnsteuerlast: needs 1 euro steps and e.g.: grep -m1 " 25.00"$ all.csv
-# 10% - 20281
-# 15% - 28580
-# 20% - 41271
-# 25% - 58449
-# 30% - 83109
-# 35% - 142472
-# 40% - 366155
-#
-P0=10;P0X=20281;P0Y=$((P0*1000));L0X=$((P0X-10000));L0Y=$((P0Y+2500));P0HUMAN="$(( P0X / 1000 )).$(( P0X % 1000 ))"
-P1=15;P1X=28580;P1Y=$((P1*1000));L1X=$((P1X-10000));L1Y=$((P1Y+2500));P1HUMAN="$(( P1X / 1000 )).$(( P1X % 1000 ))"
-P2=20;P2X=41271;P2Y=$((P2*1000));L2X=$((P2X-10000));L2Y=$((P2Y+2500));P2HUMAN="$(( P2X / 1000 )).$(( P2X % 1000 ))"
-P3=25;P3X=58449;P3Y=$((P3*1000));L3X=$((P3X-10000));L3Y=$((P3Y+2500));P3HUMAN="$(( P3X / 1000 )).$(( P3X % 1000 ))"
-P4=30;P4X=83109;P4Y=$((P4*1000));L4X=$((P4X-10000));L4Y=$((P4Y+2500));P4HUMAN="$(( P4X / 1000 )).$(( P4X % 1000 ))"
-
 dot_with_label()
 {
 	local dot_color="$1"
@@ -163,14 +156,15 @@ dot_with_label()
 	local linestart_x linestart_y labelstart_x labelstart_y
 
 	case "$dot_color" in
-		red) dot_color='#00ff00' ;;
+		red)    dot_color='#00ff00' ;;
 		orange) dot_color='#ffa500' ;;
+		green)  dot_color='#aa1100' ;;
 	esac
 
 	case "$line_orientation" in
 		upper)
-			linestart_x=$(( dot_x - 15000 ))
-			linestart_y=$(( dot_y + 30000 ))
+			linestart_x=$((  dot_x - 15000 ))
+			linestart_y=$((  dot_y + 30000 ))
 			labelstart_x=$(( dot_x - 37500 )) && test "$labelstart_x" -ge 500 || labelstart_x=500
 			labelstart_y=$(( dot_y + 32500 ))
 		;;
@@ -179,6 +173,16 @@ dot_with_label()
 			linestart_y=$(( (dot_y / 2) + 1000 ))
 			labelstart_x=$(( dot_x - 12500 )) && test "$labelstart_x" -ge 500 || labelstart_x=500
 			labelstart_y=$(( dot_y / 2 ))
+		;;
+		none_below|none_above)
+			linestart_x=$dot_x
+			linestart_y=$dot_y
+			labelstart_x=$(( dot_x -  8000 ))
+
+			case "$line_orientation" in
+				none_below) labelstart_y=$(( dot_y -  2500 )) ;;
+				none_above) labelstart_y=$(( dot_y +  2500 )) ;;
+			esac
 		;;
 	esac
 
@@ -214,20 +218,15 @@ set ylabel 'Ergebnis'
 set xlabel 'Jahresbruttolohn in Euro im Jahr $YEAR'
 set title 'BRD: Jährliche Abgaben- und Steuerlast für Arbeitnehmer abhängig vom Brutto (verheiratet, 2 Kinder, alte Bundesländer, 40-Stunden-Woche)'
 
-set object circle at first $P0X,$P0Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2
-set label 'Brutto $P0HUMAN € => $P0% Lohnsteuer eff.' at $L0X,$L0Y
-
-set object circle at first $P1X,$P1Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2
-set label 'Brutto $P1HUMAN € => $P1% Lohnsteuer eff.' at $L1X,$L1Y
-
-set object circle at first $P2X,$P2Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2
-set label 'Brutto $P2HUMAN € => $P2% Lohnsteuer eff.' at $L2X,$L2Y
-
-set object circle at first $P3X,$P3Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2
-set label 'Brutto $P3HUMAN € => $P3% Lohnsteuer eff.' at $L3X,$L3Y
-
-set object circle at first $P4X,$P4Y radius char 0.5 fillstyle empty border lc rgb '#aa1100' lw 2
-set label 'Brutto $P4HUMAN € => $P4% Lohnsteuer eff.' at $L4X,$L4Y
+#P0=10;P0X=20281;P0Y=$((P0*1000));L0X=$((P0X-10000));L0Y=$((P0Y+2500));P0HUMAN="$(( P0X / 1000 )).$(( P0X % 1000 ))"
+# Lohnsteuer-Markierungen:
+$( BRUTTO="$LS10" && P=10 && calc_tax "$BRUTTO" && dot_with_label 'green' "$BRUTTO" "$(( P * 1000 ))" none_below "Brutto $BRUTTO € => $P% Lohnsteuer eff." )
+$( BRUTTO="$LS15" && P=15 && calc_tax "$BRUTTO" && dot_with_label 'green' "$BRUTTO" "$(( P * 1000 ))" none_below "Brutto $BRUTTO € => $P% Lohnsteuer eff." )
+$( BRUTTO="$LS20" && P=20 && calc_tax "$BRUTTO" && dot_with_label 'green' "$BRUTTO" "$(( P * 1000 ))" none_below "Brutto $BRUTTO € => $P% Lohnsteuer eff." )
+$( BRUTTO="$LS25" && P=25 && calc_tax "$BRUTTO" && dot_with_label 'green' "$BRUTTO" "$(( P * 1000 ))" none_above "Brutto $BRUTTO € => $P% Lohnsteuer eff." )
+$( BRUTTO="$LS30" && P=30 && calc_tax "$BRUTTO" && dot_with_label 'green' "$BRUTTO" "$(( P * 1000 ))" none_above "Brutto $BRUTTO € => $P% Lohnsteuer eff." )
+$( BRUTTO="$LS35" && P=35 && calc_tax "$BRUTTO" && dot_with_label 'green' "$BRUTTO" "$(( P * 1000 ))" none_above "Brutto $BRUTTO € => $P% Lohnsteuer eff." )
+$( BRUTTO="$LS40" && P=40 && calc_tax "$BRUTTO" && dot_with_label 'green' "$BRUTTO" "$(( P * 1000 ))" none_above "Brutto $BRUTTO € => $P% Lohnsteuer eff." )
 
 # Mindestlohn:
 $( example_realnetto 24960 'Mindestlohn' )
