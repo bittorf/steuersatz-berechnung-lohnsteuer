@@ -11,3 +11,5 @@ see 'all.csv' and 'all.png'
 * hypertext labels: http://www.gnuplot.info/docs/loc12927.html
 * https://stackoverflow.com/questions/2827650/plotting-two-axes-in-gnuplot (z.b. Monatliches Ergebnis)
 * HTML bauen mit interaktiver vertikaler Meßstelle
+* typische "Mittelschicht" kennzeichnen: IFO Institut 2019: "Familien mit zwei Kindern mit Einkommen zwischen 36 698 Euro und 97 860 Euro"
+
