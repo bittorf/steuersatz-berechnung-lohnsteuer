@@ -6,6 +6,7 @@
 # https://www.sthu.org/blog/02-bruttonetto/index.html
 # https://www.finanz-tools.de/einkommensteuer/berechnung-formeln/2023
 # FIXME: Der Begriff "Reallohn" meint etwas anderes, als hier verwendet: https://www.destatis.de/DE/Themen/Arbeit/Verdienste/Realloehne-Nettoverdienste/_inhalt.html
+# FIXME: der SOLI muss noch auf die Abgaben drauf (ist nicht in der Standardformel enthalten)
 #
 # Median:
 # TODO: median-einkommen => z.b. blass in den hintergrund plotten
@@ -45,7 +46,7 @@ calc_steuer2023()	# input: BRUTTO => emits variables: NETTO + STEUER + PERCENT
 {
 	BRUTTO="$1"
 
-	if   [ "$BRUTTO" -le 10908 ]; then
+	if   [ "$BRUTTO" -le 10908 ]; then	# Berechnungsformel: https://www.lohn-info.de/lohnsteuerzahlen.html
 		STEUER=0
 		NETTO=$BRUTTO
 		PERCENT=0
@@ -236,6 +237,7 @@ $( example_realnetto 43750 'Median' )
 
 # Beispiel:
 $( example_realnetto 66842 'Beispiel' )
+$( example_realnetto 96000 'Milchbauer' )
 
 # KV/PV-max-Grenze:
 $( calc_tax "$MAX_KVPV" && dot_with_label 'orange' "$BRUTTO" "$SOZIAL" lower "Obergrenze Kranken-/Plegeversicherung $BRUTTO €" )
